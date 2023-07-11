@@ -1,167 +1,176 @@
-import { tweetsData } from "./data.js";
+import { tweetsData } from './data.js'
 import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
 
-const feed = document.getElementById("feed")
-
-
 document.addEventListener('click', function(e){
-    if(e.target.dataset.like) {
-        handleLikeClick(e.target.dataset.like)
+    if(e.target.dataset.like){
+       handleLikeClick(e.target.dataset.like) 
     }
-    else if(e.target.dataset.retweet) {
+    else if(e.target.dataset.retweet){
         handleRetweetClick(e.target.dataset.retweet)
     }
     else if(e.target.dataset.reply){
         handleReplyClick(e.target.dataset.reply)
     }
-    else if(e.target.id === 'tweet-btn') {
+    else if(e.target.id === 'tweet-btn'){
         handleTweetBtnClick()
     }
-    else if(e.target.id === 'reply-btn') {
-        handleTweetReplyBtnclick()
+    else if(e.target.dataset.comment){
+        handleCommentBtnClick(e.target.dataset.comment)
     }
 })
-
-function handleLikeClick(tweetId) {
-    
+ 
+function handleLikeClick(tweetId){ 
     const targetTweetObj = tweetsData.filter(function(tweet){
         return tweet.uuid === tweetId
     })[0]
 
-    if(targetTweetObj.isLiked) {
+    if (targetTweetObj.isLiked){
         targetTweetObj.likes--
-        targetTweetObj.isLiked = false
-    } else {
-        targetTweetObj.likes++
-        targetTweetObj.isLiked = true
     }
-
+    else{
+        targetTweetObj.likes++ 
+    }
+    targetTweetObj.isLiked = !targetTweetObj.isLiked
     render()
 }
 
-function handleRetweetClick(tweetId) {
-    
+function handleRetweetClick(tweetId){
     const targetTweetObj = tweetsData.filter(function(tweet){
         return tweet.uuid === tweetId
     })[0]
     
-    if(targetTweetObj.isRetweeted) {
+    if(targetTweetObj.isRetweeted){
         targetTweetObj.retweets--
-        targetTweetObj.isRetweeted = false
-    } else {
-        targetTweetObj.retweets++
-        targetTweetObj.isRetweeted = true
     }
-
-    render()
+    else{
+        targetTweetObj.retweets++
+    }
+    targetTweetObj.isRetweeted = !targetTweetObj.isRetweeted
+    render() 
 }
 
 function handleReplyClick(replyId){
     document.getElementById(`replies-${replyId}`).classList.toggle('hidden')
 }
 
-function handleTweetBtnClick() {
+function handleTweetBtnClick(){
+    const tweetInput = document.getElementById('tweet-input')
 
-    const tweetInput = document.getElementById("tweet-input")
-
-    if(tweetInput.value) {
+    if(tweetInput.value){
         tweetsData.unshift({
-            handle: `@Askur`,
-            profilePic: `images/scrimbalogo.png`,
+            handle: `@User 🐓`,
+            profilePic: `images/user.jpg`,
             likes: 0,
             retweets: 0,
-            tweetText: `${tweetInput.value}`,
+            tweetText: tweetInput.value,
             replies: [],
             isLiked: false,
             isRetweeted: false,
             uuid: uuidv4()
-    })
+        })
     render()
     tweetInput.value = ''
     }
 }
 
-function handleTweetReplyBtnclick(commentId) {
+function handleCommentBtnClick(commentId){
 
-  
-
+    const commentInput = document.getElementById(`comment-${commentId}`)
+    const targetTweetReply = tweetsData.filter(function(tweet){
+        return tweet.uuid === commentId
+    })[0]
+    
+    if(commentInput.value){
+        targetTweetReply.replies.unshift({
+            handle: `@User 🐓`,
+            profilePic: `images/user.jpg`,
+            tweetText: commentInput.value
+        })
+    render()
+    commentInput.value = ''
+    }
 }
 
-
-
-function getFeedHtml() {
+function getFeedHtml(){
     let feedHtml = ``
-
+    
     tweetsData.forEach(function(tweet){
-
+        
         let likeIconClass = ''
-        let retweetIconClass = ''
-
-        if(tweet.isLiked) {
+        
+        if (tweet.isLiked){
             likeIconClass = 'liked'
         }
-
-        if(tweet.isRetweeted) {
+        
+        let retweetIconClass = ''
+        
+        if (tweet.isRetweeted){
             retweetIconClass = 'retweeted'
         }
-
+        
         let repliesHtml = ''
-
-        if(tweet.replies.length > 0) {
-            tweet.replies.forEach(function(reply) {
-                repliesHtml += `
-                <div class="tweet-reply">
-                    <div class="tweet-inner">
-                        <img src="${reply.profilePic}" class="profile-pic">
-                            <div>
-                                <p class="handle">${reply.handle}</p>
-                                <p class="tweet-text">${reply.tweetText}</p>
-                            </div>
-                        </div>
-                </div>`
+        
+        if(tweet.replies.length > 0){
+            tweet.replies.forEach(function(reply){
+                repliesHtml+=`
+<div class="tweet-reply">
+    <div class="tweet-inner">
+        <img src="${reply.profilePic}" class="profile-pic">
+            <div>
+                <p class="handle">${reply.handle}</p>
+                <p class="tweet-text">${reply.tweetText}</p>
+            </div>
+        </div>
+</div>
+`
             })
         }
-
-
+        
+          
         feedHtml += `
-            <div class="tweet">
-                <div class="tweet-inner">
-                    <img src="${tweet.profilePic}" class="profile-pic">
-                    <div>
-                        <p class="handle">${tweet.handle}</p>
-                        <p class="tweet-text">${tweet.tweetText}</p>
-                        <div class="tweet-details">
-                            <span class="tweet-detail">
-                                ${tweet.replies.length}
-                                <i class="fa-regular fa-comment-dots" data-reply="${tweet.uuid}"></i>
-                            </span>
-                            <span class="tweet-detail">
-                                ${tweet.likes}
-                                <i class="fa-solid fa-heart ${likeIconClass}" data-like="${tweet.uuid}"></i>
-                            </span>
-                            <span class="tweet-detail">
-                                ${tweet.retweets}
-                                <i class="fa-solid fa-retweet ${retweetIconClass}" data-retweet="${tweet.uuid}"></i>
-                            </span>
-                        </div>   
-                    </div>            
-                </div>
-                <div class="hidden" id="replies-${tweet.uuid}">
-                    <div class="replytextarea">
-                      <textarea class="replytext" placeholder="Comment" id="comment-${tweet.uuid}"></textarea>
-                      <button class="replybtn" id="reply-btn">Reply</button>
-                    </div>
-                    ${repliesHtml}
-                </div>
-            </div>`
-    }) 
-return feedHtml
+<div class="tweet">
+    <div class="tweet-inner">
+        <img src="${tweet.profilePic}" class="profile-pic">
+        <div>
+            <p class="handle">${tweet.handle}</p>
+            <p class="tweet-text">${tweet.tweetText}</p>
+            <div class="tweet-details">
+                <span class="tweet-detail">
+                    <i class="fa-regular fa-comment-dots"
+                    data-reply="${tweet.uuid}"
+                    ></i>
+                    ${tweet.replies.length}
+                </span>
+                <span class="tweet-detail">
+                    <i class="fa-solid fa-heart ${likeIconClass}"
+                    data-like="${tweet.uuid}"
+                    ></i>
+                    ${tweet.likes}
+                </span>
+                <span class="tweet-detail">
+                    <i class="fa-solid fa-retweet ${retweetIconClass}"
+                    data-retweet="${tweet.uuid}"
+                    ></i>
+                    ${tweet.retweets}
+                </span>
+            </div>   
+        </div>            
+    </div>
+    <div class="hidden" id="replies-${tweet.uuid}">
+        <textarea class="comment-text" id="comment-${tweet.uuid}" placeholder="Comment here"></textarea>
+        <button data-comment="${tweet.uuid}">Comment</button>
+        ${repliesHtml}
+        
+    </div>   
+</div>
+`
+   })
+   return feedHtml 
 }
 
-function render() {
-    feed.innerHTML = getFeedHtml()
+function render(){
+    document.getElementById('feed').innerHTML = getFeedHtml()
 }
 
 render()
 
-// need to itarate over the data-comment and matchit with commentId
